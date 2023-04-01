@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class PriceCalculatorTest {
 
+
     @Test
     public void shouldReturnZeroForNoProducts() {
         // given
@@ -37,6 +38,22 @@ public class PriceCalculatorTest {
     }
 
     @Test
+    public void shouldReturnPriceForTwoProductsAndNoCoupons() {
+
+        // given
+        PriceCalculator priceCalculator = new PriceCalculator();
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Masło", 5.99, Category.FOOD));
+        products.add(new Product("Płyn do spryskiwaczy", 8.99, Category.CAR));
+
+        // when
+        double result = priceCalculator.calculatePrice(products, null);
+
+        // then
+        assertThat(result).isEqualTo(14.98);
+    }
+
+    @Test
     public void shouldReturnPriceForSingleProductAndOneCoupon() {
 
         // given
@@ -54,5 +71,42 @@ public class PriceCalculatorTest {
         assertThat(result).isEqualTo(4.79);
     }
 
+    @Test
+    public void shouldReturnPriceForTwoProductsAndOneCoupon() {
 
+        // given
+        PriceCalculator priceCalculator = new PriceCalculator();
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Masło", 5.99, Category.FOOD)); //1.2
+        products.add(new Product("Dżem", 6.99, Category.FOOD)); //1.4
+
+        List<Coupon> coupons = new ArrayList<>();
+        coupons.add(new Coupon(Category.FOOD, 20));
+
+        // when
+        double result = priceCalculator.calculatePrice(products, coupons);
+
+        // then
+        assertThat(result).isEqualTo(10.38);
+    }
+
+    @Test
+    public void shouldReturnPriceForThreeProductsAndIgnoreOtherCategory() {
+
+        // given
+        PriceCalculator priceCalculator = new PriceCalculator();
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Masło", 5.99, Category.FOOD)); //1.2
+        products.add(new Product("Dżem", 6.99, Category.FOOD)); //1.4
+        products.add(new Product("Jack Daniels", 79.99, Category.ENTERTAINMENT)); //1.4
+
+        List<Coupon> coupons = new ArrayList<>();
+        coupons.add(new Coupon(Category.FOOD, 20));
+
+        // when
+        double result = priceCalculator.calculatePrice(products, coupons);
+
+        // then
+        assertThat(result).isEqualTo(90.37);
+    }
 }
