@@ -10,60 +10,64 @@ public class PriceCalculator {
 
     public double calculatePrice(List<Product> products, List<Coupon> coupons) {
         double sumOfPrices = 0;
-        Category[] values = Category.values();
-        if (products == null) {
+        double theMostFavorablePrice = Double.MAX_VALUE;
+        if (products == null || products.isEmpty()) {
             return 0;
         } else if (coupons == null) {
-            for (Product prod : products) {
-                double price = prod.getPrice();
-                sumOfPrices += price;
-            }
-            return sumOfPrices;
-        } else if (coupons.size() <= ONE_COUPON) {
-            for (Category value : values) {
-                for (Coupon coupon : coupons) {
-                    if (value.name().equalsIgnoreCase(coupon.getCategory().toString())) {
-                        for (Product prod : products) {
-                            double price = prod.getPrice();
-                            if (prod.getCategory().name().equalsIgnoreCase(value.name())) {
-                                double discountValue = getDiscount(coupons, price);
-                                double priceAfterDiscount = price - discountValue;
-                                sumOfPrices += priceAfterDiscount;
-                            } else {
-                                sumOfPrices += price;
-                            }
-                        }
-                        BigDecimal bd = getBigDecimal(sumOfPrices);
-                        return bd.doubleValue();
+            return getSumWithoutCoupon(products);
+        } else if (coupons.size() >= ONE_COUPON) {
+            for (int i = 0; i < coupons.size(); i++) {
+                if (coupons.size() == ONE_COUPON) {
+                    sumOfPrices = getSumOfPricesForMoreThanOneCoupon(products, coupons, i);
+                } else {
+                    double sumOfPricesForMoreThanOneCoupon = getSumOfPricesForMoreThanOneCoupon(products, coupons, i);
+                    if (sumOfPricesForMoreThanOneCoupon < theMostFavorablePrice) {
+                        sumOfPrices = sumOfPricesForMoreThanOneCoupon;
                     }
                 }
             }
-        } else {
-            for (Product prod : products) {
-                double price = prod.getPrice();
+        }
+        return roundedSumOfPrices(sumOfPrices);
+    }
+
+    private static double getSumOfPricesForMoreThanOneCoupon(List<Product> products, List<Coupon> coupons, int i) {
+        double sumOfPrices = 0;
+        for (Product prod : products) {
+            double price = prod.getPrice();
+            if (prod.getCategory().name().equalsIgnoreCase(coupons.get(i).getCategory().name())) {
+                double discountValue = getDiscount(coupons, price);
+                double priceAfterDiscount = price - discountValue;
+                sumOfPrices += priceAfterDiscount;
+            } else {
                 sumOfPrices += price;
-                for (Coupon coupon : coupons) {
-                    if (coupon.getCategory() == null) {
-                        return 0;
-                    } else if (prod.getCategory().name().equalsIgnoreCase(coupon.getCategory().name())) {
-                        sumOfPrices = prod.getPrice() * coupon.getDiscountValueInPercents();
-                    }
-                }
             }
         }
         return sumOfPrices;
     }
 
+    private static double getSumWithoutCoupon(List<Product> products) {
+        double sumOfPrices = 0;
+        for (Product prod : products) {
+            double price = prod.getPrice();
+            sumOfPrices += price;
+        }
+        return sumOfPrices;
+    }
+
     private static double getDiscount(List<Coupon> coupons, double sumOfPrices) {
-        int discount = coupons.stream().mapToInt(Coupon::getDiscountValueInPercents).findFirst().getAsInt();
+        int discount = coupons.stream().mapToInt(Coupon::getDiscountValueInPercents).findFirst().orElse(0);
         double calculatedDiscount = (sumOfPrices * discount) / 100;
-        BigDecimal bd = getBigDecimal(calculatedDiscount);
-        return bd.doubleValue();
+        return roundedSumOfPrices(calculatedDiscount);
     }
 
     private static BigDecimal getBigDecimal(double calculatedDiscount) {
         BigDecimal bd = BigDecimal.valueOf(calculatedDiscount);
         bd = bd.setScale(2, RoundingMode.HALF_UP);
         return bd;
+    }
+
+    private static double roundedSumOfPrices(double sumOfPrices) {
+        BigDecimal bd = getBigDecimal(sumOfPrices);
+        return bd.doubleValue();
     }
 }
