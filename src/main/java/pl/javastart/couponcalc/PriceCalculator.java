@@ -6,36 +6,29 @@ import java.util.List;
 
 public class PriceCalculator {
 
-    private static final int ONE_COUPON = 1;
-
     public double calculatePrice(List<Product> products, List<Coupon> coupons) {
         double sumOfPrices = 0;
         double theMostFavorablePrice = Double.MAX_VALUE;
         if (products == null || products.isEmpty()) {
             return 0;
-        } else if (coupons == null) {
+        } else if (coupons == null || coupons.size() == 0) {
             return getSumWithoutCoupon(products);
-        } else if (coupons.size() >= ONE_COUPON) {
-            for (int i = 0; i < coupons.size(); i++) {
-                if (coupons.size() == ONE_COUPON) {
-                    sumOfPrices = getSumOfPricesForMoreThanOneCoupon(products, coupons, i);
-                } else {
-                    double sumOfPricesForMoreThanOneCoupon = getSumOfPricesForMoreThanOneCoupon(products, coupons, i);
-                    if (sumOfPricesForMoreThanOneCoupon < theMostFavorablePrice) {
-                        sumOfPrices = sumOfPricesForMoreThanOneCoupon;
-                    }
-                }
+        }
+        for (Coupon coupon : coupons) {
+            sumOfPrices = getSumOfTheMostFavorablePrice(products, coupon);
+            if (sumOfPrices < theMostFavorablePrice) {
+                theMostFavorablePrice = sumOfPrices;
             }
         }
         return roundedSumOfPrices(sumOfPrices);
     }
 
-    private static double getSumOfPricesForMoreThanOneCoupon(List<Product> products, List<Coupon> coupons, int i) {
+    private static double getSumOfTheMostFavorablePrice(List<Product> products, Coupon coupon) {
         double sumOfPrices = 0;
         for (Product prod : products) {
             double price = prod.getPrice();
-            if (prod.getCategory().name().equalsIgnoreCase(coupons.get(i).getCategory().name())) {
-                double discountValue = getDiscount(coupons, price);
+            if (coupon.getCategory() == null || prod.getCategory().name().equalsIgnoreCase(coupon.getCategory().name())) {
+                double discountValue = getDiscount(coupon, price);
                 double priceAfterDiscount = price - discountValue;
                 sumOfPrices += priceAfterDiscount;
             } else {
@@ -54,8 +47,8 @@ public class PriceCalculator {
         return sumOfPrices;
     }
 
-    private static double getDiscount(List<Coupon> coupons, double sumOfPrices) {
-        int discount = coupons.stream().mapToInt(Coupon::getDiscountValueInPercents).findFirst().orElse(0);
+    private static double getDiscount(Coupon coupon, double sumOfPrices) {
+        int discount = coupon.getDiscountValueInPercents();
         double calculatedDiscount = (sumOfPrices * discount) / 100;
         return roundedSumOfPrices(calculatedDiscount);
     }

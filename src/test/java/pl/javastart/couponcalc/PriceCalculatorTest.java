@@ -46,6 +46,35 @@ public class PriceCalculatorTest {
     }
 
     @Test
+    public void shouldReturnPriceForSingleProductForCouponWithoutCategory() {
+        // given
+        PriceCalculator priceCalculator = new PriceCalculator();
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Masło", 5.99, Category.FOOD));
+        List<Coupon> coupons = new ArrayList<>();
+        coupons.add(new Coupon(null, 20));
+        // when
+        double result = priceCalculator.calculatePrice(products, coupons);
+        // then
+        assertThat(result).isEqualTo(4.79);
+    }
+
+    @Test
+    public void shouldReturnPriceForTwoProductsForCouponWithoutCategory() {
+        // given
+        PriceCalculator priceCalculator = new PriceCalculator();
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Masło", 5.99, Category.FOOD));
+        products.add(new Product("Dżem", 6.99, Category.FOOD));
+        List<Coupon> coupons = new ArrayList<>();
+        coupons.add(new Coupon(null, 20));
+        // when
+        double result = priceCalculator.calculatePrice(products, coupons);
+        // then
+        assertThat(result).isEqualTo(10.38);
+    }
+
+    @Test
     public void shouldReturnPriceForSingleProductAndOneCoupon() {
         // given
         PriceCalculator priceCalculator = new PriceCalculator();
