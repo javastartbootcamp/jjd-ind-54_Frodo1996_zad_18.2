@@ -23,5 +23,4 @@ public class Product {
     public Category getCategory() {
         return category;
     }
-
 }
