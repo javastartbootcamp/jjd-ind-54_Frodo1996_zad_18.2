@@ -1,7 +1,5 @@
 package pl.javastart.couponcalc;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 
 public class PriceCalculator {
@@ -12,33 +10,31 @@ public class PriceCalculator {
         if (products == null || products.isEmpty()) {
             return 0;
         } else if (coupons == null || coupons.size() == 0) {
-            return getSumWithoutCoupon(products);
+            return calculateSumWithoutCoupon(products);
         }
         for (Coupon coupon : coupons) {
-            sumOfPrices = getSumOfTheMostFavorablePrice(products, coupon);
+            sumOfPrices = calculateSumOfTheMostFavorablePrice(products, coupon);
             if (sumOfPrices < theMostFavorablePrice) {
                 theMostFavorablePrice = sumOfPrices;
             }
         }
-        return roundedSumOfPrices(sumOfPrices);
+        return roundTo2DecimalPlaces(sumOfPrices);
     }
 
-    private static double getSumOfTheMostFavorablePrice(List<Product> products, Coupon coupon) {
+    private double calculateSumOfTheMostFavorablePrice(List<Product> products, Coupon coupon) {
         double sumOfPrices = 0;
         for (Product prod : products) {
-            double price = prod.getPrice();
-            if (coupon.getCategory() == null || prod.getCategory().name().equalsIgnoreCase(coupon.getCategory().name())) {
-                double discountValue = getDiscount(coupon, price);
-                double priceAfterDiscount = price - discountValue;
-                sumOfPrices += priceAfterDiscount;
+            if (prod.getCategory() == coupon.getCategory()) {
+                double price = prod.getPrice();
+                sumOfPrices += calculateDiscountedPrice(coupon, price);
             } else {
-                sumOfPrices += price;
+                sumOfPrices += prod.getPrice();
             }
         }
         return sumOfPrices;
     }
 
-    private static double getSumWithoutCoupon(List<Product> products) {
+    private double calculateSumWithoutCoupon(List<Product> products) {
         double sumOfPrices = 0;
         for (Product prod : products) {
             double price = prod.getPrice();
@@ -47,20 +43,12 @@ public class PriceCalculator {
         return sumOfPrices;
     }
 
-    private static double getDiscount(Coupon coupon, double sumOfPrices) {
-        int discount = coupon.getDiscountValueInPercents();
-        double calculatedDiscount = (sumOfPrices * discount) / 100;
-        return roundedSumOfPrices(calculatedDiscount);
+    private double calculateDiscountedPrice(Coupon coupon, double value) {
+        int percent = 100 - coupon.getDiscountValueInPercents();
+        return value * percent / 100.;
     }
 
-    private static BigDecimal getBigDecimal(double calculatedDiscount) {
-        BigDecimal bd = BigDecimal.valueOf(calculatedDiscount);
-        bd = bd.setScale(2, RoundingMode.HALF_UP);
-        return bd;
-    }
-
-    private static double roundedSumOfPrices(double sumOfPrices) {
-        BigDecimal bd = getBigDecimal(sumOfPrices);
-        return bd.doubleValue();
+    public double roundTo2DecimalPlaces(double value) {
+        return Math.round(value * 100) / 100.;
     }
 }
